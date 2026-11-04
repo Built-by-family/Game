@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tigers Hill School</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito+Sans:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#e9efe6;--panel:#fbfdf9;--ink:#1f2a33;--muted:#5b6b73;--accent:#e8791a;--accent-ink:#fff;--line:#c5d1c3;--ok:#2f8a4f;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141b1c;--panel:#1d272a;--ink:#e7efe9;--muted:#9fb0b0;--line:#33434a;--ok:#6fcf8f}}
+:root[data-theme="dark"]{--bg:#141b1c;--panel:#1d272a;--ink:#e7efe9;--muted:#9fb0b0;--line:#33434a;--ok:#6fcf8f}
+*{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Nunito Sans",system-ui,sans-serif;line-height:1.45}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 20px 10px;max-width:1180px;margin:0 auto}
+h1,h2,#clock,button.mode b{font-family:Fredoka,"Trebuchet MS",sans-serif;font-weight:600}
+h1{margin:0;font-size:1.5rem}
+#clock{font-size:2rem;font-variant-numeric:tabular-nums;border:3px solid var(--ink);border-radius:12px;padding:0 14px;background:var(--panel)}
+#daybar{max-width:1180px;margin:0 auto 10px;height:8px;background:var(--line);border-radius:4px;overflow:hidden;width:calc(100% - 40px)}
+#daybar i{display:block;height:100%;width:0;background:var(--accent)}
+main{display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:18px;max-width:1180px;margin:0 auto;padding:0 20px 24px}
+.stage{position:relative}
+canvas{width:100%;height:auto;aspect-ratio:3/2;display:block;border-radius:10px;border:3px solid var(--ink);background:#8fb08a}
+#overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(20,27,28,.72);border-radius:10px}
+#overlay[hidden]{display:none}
+.card{background:var(--panel);border-radius:14px;padding:22px;max-width:460px;width:100%;border:3px solid var(--ink)}
+.card h2{margin:0 0 6px;font-size:1.6rem}
+.card p{margin:0 0 12px;color:var(--muted)}
+button{font:inherit;cursor:pointer}
+button.mode{display:block;width:100%;text-align:left;margin:8px 0 0;padding:10px 14px;border-radius:10px;border:2px solid var(--ink);background:var(--panel);color:var(--ink)}
+button.mode b{display:block;font-size:1.1rem}
+button.mode span{color:var(--muted);font-size:.9rem}
+button.mode:hover{background:var(--accent);color:var(--accent-ink)}
+button.mode:hover span{color:var(--accent-ink)}
+button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+#toast{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:6px 14px;border-radius:20px;font-weight:700;font-size:.95rem;max-width:90%;text-align:center}
+#toast:empty{display:none}
+aside{background:var(--panel);border:3px solid var(--ink);border-radius:10px;padding:16px;align-self:start}
+aside h2{margin:0 0 4px;font-size:1.2rem}
+#goal{margin:0 0 10px;color:var(--muted);font-size:.92rem}
+#list{list-style:none;margin:0;padding:0}
+#list li{display:flex;gap:10px;align-items:baseline;padding:6px 0;border-top:1px solid var(--line)}
+#list li::before{content:"";flex:none;width:14px;height:14px;border:2px solid var(--ink);border-radius:4px;transform:translateY(2px)}
+#list li.done{color:var(--muted);text-decoration:line-through}
+#list li.done::before{background:var(--ok);border-color:var(--ok)}
+#list small{display:block;color:var(--muted);text-decoration:none}
+.keys{margin:12px 0 0;font-size:.85rem;color:var(--muted)}
+@media (max-width:860px){main{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header><h1>Tigers Hill School</h1><div id="clock" aria-live="off">1:30 PM</div></header>
+<div id="daybar"><i></i></div>
+<main>
+<div class="stage">
+<canvas id="c" width="960" height="640"></canvas>
+<div id="toast" role="status"></div>
+<div id="overlay"><div class="card" id="card"></div></div>
+</div>
+<aside>
+<h2>Today’s checklist</h2>
+<p id="goal">Pick a day to begin.</p>
+<ul id="list"></ul>
+<p class="keys">Move: arrow keys or WASD. Hold Shift to run. Stand on a marker and hold E or Space to work. A keyboard is needed to play.</p>
+</aside>
+</main>
+<script>
+(function(){
+var cv=document.getElementById("c"),ctx=cv.getContext("2d");
+var W=960,H=640,GAP=28;
+var calm=window.matchMedia&&matchMedia("(prefers-reduced-motion:reduce)").matches;
+
+/* ---------- map ---------- */
+var walls=[];
+function rect(x,y,w,h,hedge){if(w>0&&h>0)walls.push({x:x,y:y,w:w,h:h,hedge:!!hedge});}
+function hEdge(x1,x2,y,g,hd){if(g==null){rect(x1,y-3,x2-x1,6,hd);return;}rect(x1,y-3,g-GAP-x1,6,hd);rect(g+GAP,y-3,x2-g-GAP,6,hd);}
+function vEdge(y1,y2,x,g,hd){if(g==null){rect(x-3,y1,6,y2-y1,hd);return;}rect(x-3,y1,6,g-GAP-y1,hd);rect(x-3,g+GAP,6,y2-g-GAP,hd);}
+var rooms=[
+{n:"Room 101",x:170,y:20,w:155,h:110,d:"b",c:"#f3e3b8"},
+{n:"Library",x:325,y:20,w:155,h:110,d:"b",c:"#d9e6f2"},
+{n:"Computer Lab",x:480,y:20,w:155,h:110,d:"b",c:"#dcecdc"},
+{n:"Music Room",x:635,y:20,w:155,h:110,d:"b",c:"#ead9f0"},
+{n:"Boiler Room",x:20,y:20,w:150,h:200,d:"r",p:175,c:"#e6d3cc"},
+{n:"Janitor’s Closet",x:20,y:220,w:150,h:200,d:"r",p:320,c:"#e4e2cf"},
+{n:"Art Room",x:20,y:420,w:150,h:200,d:"r",p:465,c:"#f6dcd3"},
+{n:"Cafeteria",x:790,y:20,w:150,h:200,d:"l",p:175,c:"#f7e4c4"},
+{n:"Main Office",x:790,y:220,w:150,h:200,d:"l",p:320,c:"#d5e4e8"},
+{n:"Nurse’s Office",x:790,y:420,w:150,h:200,d:"l",p:465,c:"#e3efe3"},
+{n:"Science Lab",x:170,y:510,w:155,h:110,d:"t",c:"#d7ece8"},
+{n:"Front Hall",x:325,y:510,w:155,h:110,d:"t",c:"#eadfca"},
+{n:"Gym",x:480,y:510,w:155,h:110,d:"t",c:"#f2d9c4"},
+{n:"Teachers’ Lounge",x:635,y:510,w:155,h:110,d:"t",c:"#e2dcee"}];
+rooms.forEach(function(r){
+ var g=r.p!=null?r.p:((r.d=="t"||r.d=="b")?r.x+r.w/2:r.y+r.h/2);
+ hEdge(r.x,r.x+r.w,r.y,r.d=="t"?g:null);hEdge(r.x,r.x+r.w,r.y+r.h,r.d=="b"?g:null);
+ vEdge(r.y,r.y+r.h,r.x,r.d=="l"?g:null);vEdge(r.y,r.y+r.h,r.x+r.w,r.d=="r"?g:null);
+});
+var CY={x:300,y:230,w:360,h:180};
+hEdge(CY.x,CY.x+CY.w,CY.y,480,1);hEdge(CY.x,CY.x+CY.w,CY.y+CY.h,480,1);
+vEdge(CY.y,CY.y+CY.h,CY.x,320,1);vEdge(CY.y,CY.y+CY.h,CY.x+CY.w,320,1);
+
+/* ---------- tasks and modes ---------- */
+var TASKS=[
+{id:"proj",label:"Test the projector",room:"Room 101",x:247,y:70,dur:2.5},
+{id:"wifi",label:"Restart the library router",room:"Library",x:402,y:70,dur:3},
+{id:"lab",label:"Update the lab computers",room:"Computer Lab",x:557,y:70,dur:3.5},
+{id:"boil",label:"Check the boiler gauge",room:"Boiler Room",x:70,y:150,dur:3},
+{id:"fridge",label:"Verify cafeteria fridge power",room:"Cafeteria",x:865,y:110,dur:2.5},
+{id:"clock",label:"Sync the hallway clock",room:"Main Office",x:865,y:320,dur:3},
+{id:"eye",label:"Test the eyewash station",room:"Science Lab",x:247,y:565,dur:2.5},
+{id:"gym",label:"Replace the gym light bulb",room:"Gym",x:557,y:565,dur:3.5},
+{id:"sprk",label:"Reset the sprinkler timer",room:"Courtyard",x:480,y:320,dur:3}];
+var FUSE={id:"fuse",label:"Fix the fuse box",room:"Boiler Room",x:130,y:50,dur:3.5,fuse:1};
+var TOOLBOX={x:95,y:340,r:16};
+var MODES={
+easy:{need:6,secs:270,dark:false,goal:"Finish 6 of 9 jobs before 3:00."},
+normal:{need:7,secs:210,dark:false,goal:"Finish 7 of 9 jobs before 3:00."},
+hard:{need:7,secs:240,dark:true,goal:"Power is out. Restore it, then finish 7 of 9 jobs before 3:00."}};
+var cfg,S,tasks,keys={},lastMsg="";
+
+/* ---------- ui ---------- */
+var ov=document.getElementById("overlay"),card=document.getElementById("card"),toast=document.getElementById("toast"),
+ list=document.getElementById("list"),goal=document.getElementById("goal"),clk=document.getElementById("clock"),bar=document.querySelector("#daybar i");
+function say(m){if(m===lastMsg)return;lastMsg=m;toast.textContent=m;S.msgT=3;}
+function fmt(m){var h=Math.floor(m/60),mm=Math.floor(m%60);return (h>12?h-12:h)+":"+(mm<10?"0":"")+mm+" PM";}
+function menu(){
+ S={state:"menu",el:0};ov.hidden=false;toast.textContent="";
+ card.innerHTML="<h2>Tigers Hill School</h2><p>It’s 1:30 on a quiet afternoon. A few small jobs keep the school running, and the final bell rings at 3:00. Walk the halls, do the work, and finish before the clock does.</p>"+
+ "<button class='mode' data-m='easy'><b>Easy day</b><span>6 jobs needed, 4½ minutes on the clock.</span></button>"+
+ "<button class='mode' data-m='normal'><b>Normal day</b><span>7 jobs needed, 3½ minutes.</span></button>"+
+ "<button class='mode' data-m='hard'><b>Power outage</b><span>The lights are out. Grab the toolbox from the Janitor’s Closet, fix the fuse box in the Boiler Room, then do 7 jobs.</span></button>";
+ card.querySelectorAll("button").forEach(function(b){b.onclick=function(){start(b.dataset.m);};});
+ card.querySelector("button").focus();
+}
+function renderList(){
+ var h="";
+ tasks.forEach(function(t){h+="<li class='"+(t.done?"done":"")+"'><span>"+t.label+"<small>"+t.room+"</small></span></li>";});
+ list.innerHTML=h;
+ var n=doneCount();goal.textContent=cfg.goal+" Done: "+n+" of "+cfg.need+" needed.";
+}
+function doneCount(){return tasks.filter(function(t){return t.done&&!t.fuse;}).length;}
+function finish(win){
+ S.state=win?"win":"lose";ov.hidden=false;var n=doneCount();
+ card.innerHTML=win?
+ "<h2>The bell rings. Day complete.</h2><p>You finished "+n+" jobs with "+Math.max(0,Math.ceil(cfg.secs-S.el))+" seconds to spare. The school is ready for tomorrow.</p><button class='mode' data-m='x'><b>Play again</b></button>":
+ "<h2>3:00. Day not finished.</h2><p>You finished "+n+" of the "+cfg.need+" jobs needed, so you stay after school to catch up. Try a different route next time.</p><button class='mode' data-m='x'><b>Try the day again</b></button>";
+ var b=card.querySelector("button");b.onclick=menu;b.focus();
+}
+function start(m){
+ cfg=MODES[m];tasks=TASKS.map(function(t){return Object.assign({p:0,done:false},t);});
+ if(cfg.dark)tasks.unshift(Object.assign({p:0,done:false},FUSE));
+ S={state:"play",el:0,x:247,y:100,power:!cfg.dark,tool:false,msgT:0,t:0};lastMsg="";
+ ov.hidden=true;renderList();
+ if(cfg.dark)say("Power’s out. Find the toolbox in the Janitor’s Closet.");else say("Head to a glowing marker and hold E.");
+}
+
+/* ---------- input ---------- */
+addEventListener("keydown",function(e){keys[e.code]=true;if(/^(Arrow|Space)/.test(e.code)&&S&&S.state=="play")e.preventDefault();});
+addEventListener("keyup",function(e){keys[e.code]=false;});
+addEventListener("blur",function(){keys={};});
+
+/* ---------- logic ---------- */
+function hits(x,y,r){
+ for(var i=0;i<walls.length;i++){var w=walls[i],cx=Math.max(w.x,Math.min(x,w.x+w.w)),cy=Math.max(w.y,Math.min(y,w.y+w.h));
+  if((x-cx)*(x-cx)+(y-cy)*(y-cy)<r*r)return true;}
+ return x<26||x>934||y<26||y>614;
+}
+function avail(t){if(t.done)return false;if(t.fuse)return S.tool&&!S.power;return S.power;}
+function update(dt){
+ S.el+=dt;S.t+=dt;if(S.msgT>0){S.msgT-=dt;if(S.msgT<=0){toast.textContent="";lastMsg="";}}
+ var ax=(keys.ArrowRight||keys.KeyD?1:0)-(keys.ArrowLeft||keys.KeyA?1:0),ay=(keys.ArrowDown||keys.KeyS?1:0)-(keys.ArrowUp||keys.KeyW?1:0);
+ var working=keys.KeyE||keys.Space;
+ var near=null;tasks.forEach(function(t){if(!t.done&&Math.hypot(S.x-t.x,S.y-t.y)<28)near=t;});
+ var canWork=near&&avail(near);
+ if(ax||ay){var l=Math.hypot(ax,ay),sp=(keys.ShiftLeft||keys.ShiftRight)?170:100;
+  var nx=S.x+ax/l*sp*dt,ny=S.y+ay/l*sp*dt;if(!hits(nx,S.y,8))S.x=nx;if(!hits(S.x,ny,8))S.y=ny;}
+ if(near&&!canWork){say(near.fuse?"You need the toolbox first.":"The power is out. Fix the fuse box first.");}
+ if(cfg.dark&&!S.tool&&Math.hypot(S.x-TOOLBOX.x,S.y-TOOLBOX.y)<TOOLBOX.r+8){S.tool=true;say("Got the toolbox. The fuse box is in the Boiler Room.");}
+ S.working=null;
+ tasks.forEach(function(t){
+  if(t.done)return;
+  if(t===near&&canWork&&working&&!(ax||ay)){t.p+=dt/t.dur;S.working=t;
+   if(t.p>=1){t.p=1;t.done=true;
+    if(t.fuse){S.power=true;say("Lights are back on!");}else say(t.label+": done.");
+    renderList();if(!t.fuse&&doneCount()>=cfg.need){finish(true);}}}
+  else if(t.p>0)t.p=Math.max(0,t.p-dt/t.dur*0.4);
+ });
+ if(S.state=="play"&&S.el>=cfg.secs)finish(false);
+}
+
+/* ---------- drawing ---------- */
+function draw(){
+ ctx.fillStyle="#8fb08a";ctx.fillRect(0,0,W,H);
+ ctx.fillStyle="#cdd7c6";ctx.fillRect(170,130,620,380);
+ ctx.fillStyle="#9bc48d";ctx.fillRect(CY.x,CY.y,CY.w,CY.h);
+ ctx.fillStyle="#7fae78";for(var i=0;i<8;i++)ctx.fillRect(320+i*42,250+((i*37)%120),14,6);
+ rooms.forEach(function(r){ctx.fillStyle=r.c;ctx.fillRect(r.x,r.y,r.w,r.h);});
+ ctx.fillStyle="#2f5f3a";ctx.beginPath();ctx.arc(420,270,16,0,7);ctx.arc(550,375,14,0,7);ctx.fill();
+ walls.forEach(function(w){ctx.fillStyle=w.hedge?"#3f7a46":"#3b4a54";ctx.fillRect(w.x,w.y,w.w,w.h);});
+ ctx.font="700 12px 'Nunito Sans',sans-serif";ctx.fillStyle="rgba(31,42,51,.75)";ctx.textAlign="left";
+ rooms.forEach(function(r){ctx.fillText(r.n,r.x+8,r.y+(r.d=="t"?r.h-8:20));});
+ ctx.fillText("Courtyard",CY.x+10,CY.y+CY.h-8);
+ ctx.fillStyle="#6a4a2a";ctx.fillRect(405,603,70,6);ctx.fillStyle="#fff";ctx.fillText("Front door",408,600);
+ if(S.state=="menu")return;
+ var pulse=calm?0:Math.sin(S.t*4)*2;
+ if(cfg.dark&&!S.tool){ctx.fillStyle="#a86a2c";ctx.fillRect(TOOLBOX.x-12,TOOLBOX.y-8,24,16);ctx.fillStyle="#3b2a18";ctx.fillRect(TOOLBOX.x-12,TOOLBOX.y-8,24,4);}
+ tasks.forEach(function(t){
+  var a=avail(t);ctx.lineWidth=3;ctx.beginPath();ctx.arc(t.x,t.y,15+(a&&!t.done?pulse:0),0,7);
+  if(t.done){ctx.fillStyle="#2f8a4f";ctx.fill();ctx.fillStyle="#fff";ctx.textAlign="center";ctx.font="700 16px sans-serif";ctx.fillText("✓",t.x,t.y+6);}
+  else{ctx.fillStyle=a?"rgba(232,121,26,.25)":"rgba(90,100,105,.3)";ctx.fill();ctx.strokeStyle=a?"#e8791a":"#6b777c";ctx.stroke();
+   if(t.p>0){ctx.beginPath();ctx.arc(t.x,t.y,15,-1.57,-1.57+6.28*t.p);ctx.strokeStyle="#2f8a4f";ctx.lineWidth=5;ctx.stroke();}
+   if(t.fuse){ctx.fillStyle="#e8c21a";ctx.font="700 14px sans-serif";ctx.textAlign="center";ctx.fillText("⚡",t.x,t.y+5);}}
+ });
+ /* player */
+ ctx.fillStyle="#e8791a";ctx.beginPath();ctx.arc(S.x,S.y,9,0,7);ctx.arc(S.x-6,S.y-8,3.5,0,7);ctx.arc(S.x+6,S.y-8,3.5,0,7);ctx.fill();
+ ctx.strokeStyle="#1f2a33";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(S.x-4,S.y-5);ctx.lineTo(S.x-1,S.y-1);ctx.moveTo(S.x+4,S.y-5);ctx.lineTo(S.x+1,S.y-1);ctx.moveTo(S.x-6,S.y+3);ctx.lineTo(S.x-2,S.y+4);ctx.moveTo(S.x+6,S.y+3);ctx.lineTo(S.x+2,S.y+4);ctx.stroke();
+ if(S.working){var p=S.working.p;ctx.fillStyle="rgba(31,42,51,.8)";ctx.fillRect(S.x-20,S.y-26,40,7);ctx.fillStyle="#f0a040";ctx.fillRect(S.x-19,S.y-25,38*p,5);}
+ if(cfg.dark&&!S.power){var g=ctx.createRadialGradient(S.x,S.y,30,S.x,S.y,150);g.addColorStop(0,"rgba(10,14,22,0)");g.addColorStop(1,"rgba(10,14,22,.92)");ctx.fillStyle=g;ctx.fillRect(0,0,W,H);}
+}
+
+/* ---------- loop ---------- */
+var last=0;
+function frame(ts){
+ var dt=Math.min(.05,(ts-last)/1000||0);last=ts;
+ if(S&&S.state=="play"){update(dt);}
+ if(S&&S.state!="menu"){var f=Math.min(1,S.el/cfg.secs);clk.textContent=fmt(810+90*f);bar.style.width=(f*100)+"%";}
+ draw();requestAnimationFrame(frame);
+}
+tasks=[];cfg=MODES.normal;menu();requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
