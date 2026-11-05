@@ -1,5 +1,5 @@
 <!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
-<title>Holy Family Hall Pass</title>
+<title>Blackmoor Hall Pass</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -186,7 +186,7 @@ h2{font-family:var(--display);font-weight:400;font-size:clamp(34px,8vw,56px);mar
 
 </style>
 
-<canvas id="cv" aria-label="Holy Family school map"></canvas>
+<canvas id="cv" aria-label="Blackmoor Academy school map"></canvas>
 
 <div id="hud" hidden>
   <div class="tl">
@@ -233,8 +233,8 @@ h2{font-family:var(--display);font-weight:400;font-size:clamp(34px,8vw,56px);mar
 <div class="overlay title" id="menu">
   <div class="tscreen">
     <div class="tleft">
-      <div class="eyebrow">Holy Family School · Est. 1954 · Power outage</div>
-      <h1 class="logo" data-text="HOLY FAMILY">HOLY FAMILY</h1>
+      <div class="eyebrow">Blackmoor Academy · Est. 1954 · Power outage</div>
+      <h1 class="logo" data-text="BLACKMOOR">BLACKMOOR</h1>
       <div class="sub">HALL&nbsp;PASS</div>
       <p class="tagline">The lights are out. Your teacher left the room. Three staff members are walking the halls, and they want you back in your seat.</p>
       <nav class="mnav" aria-label="Main menu">
@@ -281,9 +281,9 @@ h2{font-family:var(--display);font-weight:400;font-size:clamp(34px,8vw,56px);mar
     <div class="eyebrow">Staff on hall duty tonight</div>
     <h2>Meet the staff</h2>
     <div class="cams">
-      <div class="cam"><canvas id="camV" width="320" height="240"></canvas><b>Mrs. Volcani</b><p>Brown hair, thick glasses that catch the light. Fast on her feet. Two little glints in the dark means she's looking at you.</p></div>
-      <div class="cam"><canvas id="camG" width="320" height="240"></canvas><b>Mr. Galmish</b><p>Big, bald, rolls the halls in his wheelchair. On a long straight hallway he picks up speed. Listen for the squeaky wheels.</p></div>
-      <div class="cam"><canvas id="camU" width="320" height="240"></canvas><b>Mrs. Guitieres</b><p>Huge, gray hair, glowing red eyes, and arms long enough to grab you from a step away. Heavy footsteps.</p></div>
+      <div class="cam"><canvas id="camV" width="320" height="240"></canvas><b>Miss Ashby</b><p>Brown hair, thick glasses that catch the light. Fast on her feet. Two little glints in the dark means she's looking at you.</p></div>
+      <div class="cam"><canvas id="camG" width="320" height="240"></canvas><b>Mr. Thornwood</b><p>Big, bald, rolls the halls in his wheelchair. On a long straight hallway he picks up speed. Listen for the squeaky wheels.</p></div>
+      <div class="cam"><canvas id="camU" width="320" height="240"></canvas><b>Mrs. Blackmoor</b><p>Huge, gray hair, glowing red eyes, and arms long enough to grab you from a step away. Heavy footsteps.</p></div>
     </div>
     <button class="go" data-back type="button">Back</button>
   </div>
@@ -302,7 +302,7 @@ h2{font-family:var(--display);font-weight:400;font-size:clamp(34px,8vw,56px);mar
 
 <div class="overlay" id="end" hidden>
   <div class="slip">
-    <div class="eyebrow" id="endEyebrow">Holy Family School</div>
+    <div class="eyebrow" id="endEyebrow">Blackmoor Academy</div>
     <h2 id="endTitle">Detention</h2>
     <p class="story" id="endText"></p>
     <div class="stats">
@@ -409,9 +409,9 @@ let staff=[];
 const game={mode:'menu',t:0,strikes:0,catchT:0,catcher:null,dark:.955,paused:false,shake:0,threat:0,cam:-1,camIdx:0,camStatic:0};
 pickTasks();
 function makeStaff(){return [
-  mkStaff({id:'v',name:'Mrs. Volcani',sx:35.5,sy:36.5,sight:9,patrol:1.7,chase:3.5}),
-  mkStaff({id:'g',name:'Mr. Galmish',sx:3.5,sy:26.5,sight:7.5,patrol:1.4,chase:2.9}),
-  mkStaff({id:'u',name:'Mrs. Guitieres',sx:36.5,sy:27,sight:8,patrol:1.5,chase:2.8,reach:1.05}),
+  mkStaff({id:'v',name:'Miss Ashby',sx:35.5,sy:36.5,sight:9,patrol:1.7,chase:3.5}),
+  mkStaff({id:'g',name:'Mr. Thornwood',sx:3.5,sy:26.5,sight:7.5,patrol:1.4,chase:2.9}),
+  mkStaff({id:'u',name:'Mrs. Blackmoor',sx:36.5,sy:27,sight:8,patrol:1.5,chase:2.8,reach:1.05}),
 ]}
 const spray={n:3,max:5,parts:[]};
 const tiger={on:false,x:0,y:0,a:0,cd:0,target:null,path:[],repath:0,anim:0,moving:false,chaseT:0};
@@ -887,7 +887,7 @@ function scareEvent(){
     for(let i=0;i<25;i++){const a=player.a+(Math.random()-.5)*2,d=7.5+Math.random()*3,x=player.x+Math.cos(a)*d,y=player.y+Math.sin(a)*d;
       if(walkS(Math.floor(x),Math.floor(y))&&los(player.x,player.y,x,y)){game.fake={x,y,t:1.7};sfx.whisper();break}}
   }
-  else if(r<.76){sfx.pa();cap(pick(['(the PA crackles) "...all students... return to your seats..."','(the PA crackles) "We know you are out of class."','(the PA crackles) "Mrs. Guitieres... to the hallway... please."','(the PA hisses) "Your worksheet is waiting."']),3.6)}
+  else if(r<.76){sfx.pa();cap(pick(['(the PA crackles) "...all students... return to your seats..."','(the PA crackles) "We know you are out of class."','(the PA crackles) "Mrs. Blackmoor... to the hallway... please."','(the PA hisses) "Your worksheet is waiting."']),3.6)}
   else{sfx.slam();cap(pick(['(somewhere, a locker slams shut)','(a door creaks open down the hall)','(something heavy drags across the floor)','(a desk scrapes in an empty classroom)']),2.6)}
 }
 function completeTask(t){
@@ -906,10 +906,10 @@ function completeTask(t){
 }
 
 const LINES={
-  v:['Mrs. Volcani’s cold hand lands on your shoulder.','Her glasses flash. “Worksheet. Seat. Now.”'],
-  g:['Mr. Galmish rolls up behind you and grabs your backpack strap.','“Class isn’t over yet.” He wheels you all the way back.'],
+  v:['Miss Ashby’s cold hand lands on your shoulder.','Her glasses flash. “Worksheet. Seat. Now.”'],
+  g:['Mr. Thornwood rolls up behind you and grabs your backpack strap.','“Class isn’t over yet.” He wheels you all the way back.'],
 };
-LINES.u=['A long arm stretches out of the dark and bony fingers wrap around your wrist.','Mrs. Guitieres’ red eyes glow above you. “You belong in your seat.”'];
+LINES.u=['A long arm stretches out of the dark and bony fingers wrap around your wrist.','Mrs. Blackmoor’ red eyes glow above you. “You belong in your seat.”'];
 function caught(s,fromLocker){
   game.mode='caught';game.catchT=0;game.catcher=s;sfx.scream();setTimeout(()=>sfx.sting(),900);
   game.cam=-1;$('camui').hidden=true;$('hud').classList.remove('camming');closeKeypad();
@@ -933,8 +933,8 @@ function resolveCatch(){
 function endGame(kind){
   game.mode='end';game.cam=-1;$('camui').hidden=true;$('hud').classList.remove('camming');$('hud').hidden=true;$('touch').hidden=true;$('catch').hidden=true;
   const T={
-    win:['You made it out','ESCAPED','All five jobs done. You slip through the front doors of Holy Family and the cold air hits your face. Somewhere behind you, a wheelchair squeaks to a stop.'],
-    detention:['Detention','CAUGHT THREE TIMES','Mrs. Volcani writes your name on the board in perfect cursive. Mr. Galmish parks his wheelchair in the doorway. Nobody is leaving.'],
+    win:['You made it out','ESCAPED','All five jobs done. You slip through the front doors of Blackmoor Academy and the cold air hits your face. Somewhere behind you, a wheelchair squeaks to a stop.'],
+    detention:['Detention','CAUGHT THREE TIMES','Miss Ashby writes your name on the board in perfect cursive. Mr. Thornwood parks his wheelchair in the doorway. Nobody is leaving.'],
     bell:['The final bell','3:00 PM','The bell rings and the buses pull away. You didn’t finish in time, so you’re staying after school to finish your worksheet.'],
   }[kind];
   $('endTitle').textContent=T[0];$('endEyebrow').textContent=T[1];$('endText').textContent=T[2];
@@ -1398,7 +1398,7 @@ function drawMonitor(dt,time){
   monc.font='16px "IBM Plex Mono", monospace';monc.textAlign='left';
   if(Math.floor(time*2)%2){monc.fillStyle='#e03a3a';monc.beginPath();monc.arc(20,22,6,0,TAU);monc.fill()}
   monc.fillStyle='#e8e2d0';monc.fillText('REC  '+STAFFCAM[who].join('  '),34,28);
-  monc.textAlign='right';monc.fillText(['MRS. GUITIERES','MRS. VOLCANI','MR. GALMISH'][mstate.i],w-16,h-16);
+  monc.textAlign='right';monc.fillText(['MRS. BLACKMOOR','MISS ASHBY','MR. THORNWOOD'][mstate.i],w-16,h-16);
   monc.textAlign='left';monc.fillStyle='rgba(232,226,208,.6)';monc.fillText('11:47 PM',16,h-16);
 }
 
@@ -1480,11 +1480,11 @@ function sceneExterior(t){
     ctx.fillStyle=on?`rgba(230,193,90,${.7+Math.random()*.2})`:'#12101a';ctx.fillRect(wx,wy,bw*.045,bh*.24);
   }
   ctx.fillStyle='#16121c';ctx.fillRect(cx-bw*.05,base-bh*.45,bw*.1,bh*.45);
-  ctx.font=cutFont(Math.max(10,bw*.022));ctx.textAlign='center';ctx.fillStyle='rgba(235,229,212,.35)';ctx.fillText('HOLY FAMILY SCHOOL',cx,base-bh*.55);
+  ctx.font=cutFont(Math.max(10,bw*.022));ctx.textAlign='center';ctx.fillStyle='rgba(235,229,212,.35)';ctx.fillText('BLACKMOOR ACADEMY',cx,base-bh*.55);
   ctx.fillStyle='#050408';ctx.fillRect(0,base,vw,vh-base);
   ctx.strokeStyle='rgba(170,180,210,.25)';ctx.lineWidth=1;ctx.beginPath();
   for(let i=0;i<140;i++){const x=(i*97+t*260*(1+i%3*.2))%vw,y=(i*53+t*900)%vh;ctx.moveTo(x,y);ctx.lineTo(x-4,y+16)}ctx.stroke();
-  cutText(['Holy Family School.'],.6,2.8,t);
+  cutText(['Blackmoor Academy.'],.6,2.8,t);
   cutText(['11:47 AM. A storm knocks out the power.'],2.9,5.4,t);
 }
 function sceneHall(t){
@@ -1532,7 +1532,7 @@ function sceneFight(t){
     ctx.strokeStyle=`rgba(255,240,240,${s.life*3})`;ctx.lineWidth=4*s.life*4;ctx.beginPath();ctx.moveTo(s.x1,s.y1);ctx.lineTo(s.x2,s.y2);ctx.stroke();
     ctx.strokeStyle=`rgba(255,40,40,${s.life*2})`;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(s.x1+6,s.y1+6);ctx.lineTo(s.x2+6,s.y2+6);ctx.stroke()}
   cutText(['The teachers fought it.'],11.3,13.9,t);
-  cutText(['Mr. Galmish. Mrs. Volcani. Mrs. Guitieres.'],14.0,16.2,t,{scale:.85});
+  cutText(['Mr. Thornwood. Miss Ashby. Mrs. Blackmoor.'],14.0,16.2,t,{scale:.85});
   cutText(['They lost.'],16.6,19,t,{col:'#ff3a3a',scale:1.4,glitch:true});
 }
 function hitFX(x,y){
